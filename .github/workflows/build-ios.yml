@@ -1,0 +1,45 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ] # Akan berjalan otomatis setiap kamu push ke branch main
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Dependencies
+      run: |
+        npm install
+        
+    - name: Capacitor Sync
+      run: |
+        npx cap json
+        npx cap add ios
+        npx cap sync ios
+
+    - name: Build iOS App (Unsigned IPA)
+      run: |
+        cd ios/App
+        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO OBJROOT=$PWD/build SYMROOT=$PWD/build
+        
+    - name: Create IPA Package
+      run: |
+        mkdir -p Payload
+        cp -r ios/App/build/Release-iphoneos/App.app Payload/
+        zip -r app-unsigned.ipa Payload
+        
+    - name: Upload IPA Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-app
+        path: app-unsigned.ipa
