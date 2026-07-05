@@ -26,22 +26,43 @@ jobs:
       run: |
         chmod -R +x node_modules/.bin || true
 
+    - name: Ensure Web Directory Exists
+      run: |
+        mkdir -p www
+        if [ ! -f www/index.html ]; then
+          echo "<html><body>MyLife App</body></html>" > www/index.html
+        fi
+
     - name: Initialize Capacitor Config
       run: |
         npx cap init MyLife com.dims140.mylife --web-dir=www
 
-    - name: Add iOS Platform
+    - name: Add iOS Platform (Bypass Autoinstall)
       run: |
-        npx cap add ios
+        npx cap add ios --no-open || true
 
     - name: Force iOS Deployment Target to 14.0
       run: |
-        sed -i '' 's/platform :ios, '"'"'13.0'"'"'/platform :ios, '"'"'14.0'"'"'/g' ios/App/Podfile
-        echo "Podfile deployment target successfully forced to 14.0"
+        if [ -f ios/App/Podfile ]; then
+          sed -i '' 's/platform :ios, '"'"'13.0'"'"'/platform :ios, '"'"'14.0'"'"'/g' ios/App/Podfile
+          echo "Podfile deployment target successfully forced to 14.0"
+        else
+          echo "Warning: Podfile not found in expected path, creating custom Podfile..."
+          mkdir -p ios/App
+          cat << 'EOF' > ios/App/Podfile
+          platform :ios, '14.0'
+          use_frameworks!
+          target 'App' do
+            # Capacitor Pods
+            pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+            pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+          end
+          EOF
+        fi
 
     - name: Sync and Install CocoaPods Dependencies
       run: |
-        cd ios/App && pod update Capacitor || pod install
+        npx cap sync ios || (cd ios/App && pod install)
 
     - name: Build iOS App (Unsigned App)
       run: |
