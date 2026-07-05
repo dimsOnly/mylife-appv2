@@ -20,6 +20,11 @@ jobs:
     - name: Install Dependencies
       run: |
         npm install
+        npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+    - name: Fix Node Modules Permissions
+      run: |
+        chmod -R +x node_modules/.bin || true
 
     - name: Build Capacitor Project
       run: |
