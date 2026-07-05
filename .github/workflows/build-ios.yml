@@ -1,36 +1,23 @@
-name: Build iOS
+name: Build IPA
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-ios:
+  build:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 22
 
       - name: Install Dependencies
         run: npm install
-
-      - name: Check Web Assets
-        run: |
-          ls -la
-          ls -la www
-
-          if [ ! -f "www/index.html" ]; then
-            echo "www/index.html tidak ditemukan!"
-            exit 1
-          fi
-
-          echo "Web assets ditemukan."
 
       - name: Install Capacitor iOS
         run: npm install @capacitor/ios@7.6.7
@@ -44,25 +31,31 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
-      - name: Setup CocoaPods
+      - name: Install CocoaPods
         run: |
           sudo gem install cocoapods
           cd ios/App
-          pod repo update
           pod install
 
-      - name: Build iOS
+      - name: Archive App
         run: |
           cd ios/App
-          xcodebuild \
+          xcodebuild archive \
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
-            -sdk iphoneos \
-            CODE_SIGNING_ALLOWED=NO
+            -archivePath App.xcarchive
 
-      - name: Upload Build
+      - name: Export IPA
+        run: |
+          cd ios/App
+          xcodebuild -exportArchive \
+            -archivePath App.xcarchive \
+            -exportPath export \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
-          path: ios/App/build
+          name: ipa
+          path: ios/App/export/*.ipa
