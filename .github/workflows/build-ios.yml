@@ -30,22 +30,18 @@ jobs:
       run: |
         npx cap init MyLife com.dims140.mylife --web-dir=www
 
-    - name: Add iOS Platform Without Install
+    - name: Add iOS Platform
       run: |
-        npx cap add ios --no-open || true
+        npx cap add ios
 
     - name: Force iOS Deployment Target to 14.0
       run: |
-        if [ -f ios/App/Podfile ]; then
-          sed -i '' 's/platform :ios, '"'"'13.0'"'"'/platform :ios, '"'"'14.0'"'"'/g' ios/App/Podfile
-          echo "Podfile updated successfully!"
-        else
-          echo "Podfile not found yet, creating fallback modifications..."
-        fi
+        sed -i '' 's/platform :ios, '"'"'13.0'"'"'/platform :ios, '"'"'14.0'"'"'/g' ios/App/Podfile
+        echo "Podfile deployment target successfully forced to 14.0"
 
     - name: Sync and Install CocoaPods Dependencies
       run: |
-        npx cap sync ios
+        cd ios/App && pod update Capacitor || pod install
 
     - name: Build iOS App (Unsigned App)
       run: |
