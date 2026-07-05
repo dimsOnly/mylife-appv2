@@ -26,11 +26,11 @@ jobs:
           ls -la www
 
           if [ ! -f "www/index.html" ]; then
-            echo "❌ www/index.html tidak ditemukan!"
+            echo "www/index.html tidak ditemukan!"
             exit 1
           fi
 
-          echo "✅ Web assets ditemukan."
+          echo "Web assets ditemukan."
 
       - name: Install Capacitor iOS
         run: npm install @capacitor/ios@7.6.7
@@ -60,8 +60,8 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             CODE_SIGNING_ALLOWED=NO
-            
-       - name: Upload Build
+
+      - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
