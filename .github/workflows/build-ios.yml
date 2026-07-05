@@ -2,7 +2,7 @@ name: Build iOS App
 
 on:
   push:
-    branches: [ main ] # Akan berjalan otomatis setiap kamu push ke branch main
+    branches: [ main ]
 
 jobs:
   build-ios:
@@ -20,19 +20,19 @@ jobs:
     - name: Install Dependencies
       run: |
         npm install
-        
-    - name: Capacitor Sync
+
+    - name: Build Capacitor Project
       run: |
-        npx cap json
+        npx cap init MyLife com.dims140.mylife --web-dir=www
         npx cap add ios
         npx cap sync ios
 
-    - name: Build iOS App (Unsigned IPA)
+    - name: Build iOS App (Unsigned App)
       run: |
         cd ios/App
         xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO OBJROOT=$PWD/build SYMROOT=$PWD/build
         
-    - name: Create IPA Package
+    - name: Package IPA
       run: |
         mkdir -p Payload
         cp -r ios/App/build/Release-iphoneos/App.app Payload/
