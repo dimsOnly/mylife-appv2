@@ -30,6 +30,13 @@ jobs:
       run: |
         npx cap init MyLife com.dims140.mylife --web-dir=www
         npx cap add ios
+        
+    - name: Force iOS Deployment Target to 14.0
+      run: |
+        sed -i '' 's/platform :ios, '"'"'13.0'"'"'/platform :ios, '"'"'14.0'"'"'/g' ios/App/Podfile || true
+        
+    - name: Sync Capacitor iOS
+      run: |
         npx cap sync ios
 
     - name: Build iOS App (Unsigned App)
