@@ -1,17 +1,17 @@
-name: Build IPA
+name: Build iOS
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-ios:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -21,6 +21,16 @@ jobs:
 
       - name: Install Capacitor iOS
         run: npm install @capacitor/ios@7.6.7
+
+      - name: Verify Web Assets
+        run: |
+          ls -la
+          ls -la www
+
+          if [ ! -f "www/index.html" ]; then
+            echo "www/index.html tidak ditemukan!"
+            exit 1
+          fi
 
       - name: Add iOS Platform
         run: |
@@ -37,25 +47,18 @@ jobs:
           cd ios/App
           pod install
 
-      - name: Archive App
+      - name: Build (Unsigned)
         run: |
           cd ios/App
-          xcodebuild archive \
+          xcodebuild \
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
-            -archivePath App.xcarchive
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO
 
-      - name: Export IPA
-        run: |
-          cd ios/App
-          xcodebuild -exportArchive \
-            -archivePath App.xcarchive \
-            -exportPath export \
-            -exportOptionsPlist ExportOptions.plist
-
-      - name: Upload IPA
+      - name: Upload iOS Project
         uses: actions/upload-artifact@v4
         with:
-          name: ipa
-          path: ios/App/export/*.ipa
+          name: MyLife-iOS-Project
+          path: ios
